@@ -18,7 +18,7 @@ const Login = ({navigation}) => {
     setShowPassword(prevState => !prevState);
   };
   const handleLogin = () => {
-    navigation.navigate('UserHome')
+    navigation.navigate('DoctorHome')
   };
   return (
     <View>
