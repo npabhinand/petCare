@@ -6,31 +6,68 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  ToastAndroid,
+  Alert
 } from 'react-native';
 import React, {useState} from 'react';
 import {Avatar} from '@rneui/base';
 import {RadioButton} from 'react-native-paper';
 import {Card} from '@rneui/themed';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore'; // Import Firestore
+// import firebase from '@react-native-firebase/app';
+
 const SignUp = ({navigation}) => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [phone, setPhone] = useState();
   const [showPassword, setShowPassword] = useState(false);
+  const [name,setName]=useState();
   const [checked, setChecked] = useState('user');
-
+  
   const togglePasswordVisibility = () => {
     setShowPassword(prevState => !prevState);
   };
-  const handleSignUp = ({navigation}) => {};
+  
+  const handleSignUp = async () => {
+    if (!email || !password || !name || !phone ) {
+      // Check if any required field is empty
+      Alert.alert('Error', 'Please fill in all the required fields');
+      return; // Exit the function
+    }
+  
+    try {
+      const userCredentials = await auth().createUserWithEmailAndPassword(email, password);
+      const user = userCredentials.user;
+      console.log(user.email);
+  
+      // Store user data in Firestore
+      await firestore().collection('users')
+        .doc(user.uid) // Use user's UID as the document ID
+        .set({
+          userType: checked,
+          email: email,
+          phone: phone,
+          name: name,
+        });
+  
+      ToastAndroid.show('SignUp successful', ToastAndroid.SHORT);
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
   return (
     <View>
       <Text style={styles.heading}>Create a new account</Text>
+      <ScrollView>
       <Image
         source={require('../assets/pet.png')}
         style={{width: '95%', height: 280, alignSelf: 'center'}}
       />
 
-      <ScrollView>
+      
         <Card containerStyle={styles.container}>
           <View style={styles.radio}>
             <RadioButton
@@ -45,6 +82,23 @@ const SignUp = ({navigation}) => {
               onPress={() => setChecked('doctor')}
             />
             <Text style={styles.radioText}>Doctor</Text>
+          </View>
+          <View style={styles.form1}>
+            <Avatar
+              size={32}
+              source={require('../assets/profile.png')}
+              containerStyle={{
+                marginLeft: 10,
+                marginTop: 5,
+                width: 30,
+                height: 30,
+              }}
+            />
+            <TextInput
+              placeholder="Enter Name"
+              onChangeText={setName}
+              style={styles.inputs}
+              placeholderTextColor="black"></TextInput>
           </View>
 
           <View style={styles.form1}>

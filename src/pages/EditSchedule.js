@@ -3,7 +3,7 @@ import React from 'react';
 import {Card} from '@rneui/base';
 import { ScrollView } from 'react-native';
 
-export default function EditSchedule() {
+export default function EditSchedule({navigation}) {
   return (
     <View style={{marginBottom: 100}}>
       <ScrollView>
@@ -37,7 +37,7 @@ export default function EditSchedule() {
               <Text style={styles.btnText}>15.00-15.30</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.btn1}>
+          <TouchableOpacity style={styles.btn1} onPress={()=>{navigation.navigate('Edit')}}>
             <Text style={styles.btnText}>Edit Schedule</Text>
           </TouchableOpacity>
       </Card>

@@ -2,20 +2,21 @@ import {View, Text, StyleSheet, TouchableOpacity,Image} from 'react-native';
 import React from 'react';
 import {Avatar} from '@rneui/base';
 
-export default function DoctorHome({navigation}) {
+export default function DoctorHome({navigation,route}) {
+  const userD=route.params;
   return (
     <View style={styles.container}>
 
       <View style={styles.row}>
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate('Profile');
+            navigation.navigate('Profile',{userD});
           }} >
           <Avatar source={require('../assets/profile.png')} 
           containerStyle={{marginLeft:10}}></Avatar>
         </TouchableOpacity>
         <Text style={styles.heading}>Dr.Abhinand</Text>
-        <TouchableOpacity onPress={() => {navigation.navigate('Notification');}}>
+        <TouchableOpacity onPress={() => {navigation.navigate('Notification',userD);}}>
           <Avatar source={require('../assets/bell.png')} containerStyle={{marginRight:10}}/>
         </TouchableOpacity>
       </View>
@@ -24,13 +25,13 @@ export default function DoctorHome({navigation}) {
 
       <View style={styles.row1}>
         <TouchableOpacity style={styles.btn}
-          onPress={() => {navigation.navigate('Appointments');}}>
+          onPress={() => {navigation.navigate('Appointments',userD);}}>
           <Image source={require('../assets/appointment.png')}/>
           <Text style={styles.btnText}>Appointments</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.btn}
-        onPress={() => {navigation.navigate('AddSchedule');}}>
+        onPress={() => {navigation.navigate('AddSchedule',userD);}}>
         <Image source={require('../assets/schedule1.png')}/>
           <Text style={styles.btnText}>Add Schedule</Text>
         </TouchableOpacity>
@@ -39,12 +40,12 @@ export default function DoctorHome({navigation}) {
 
       <View style={styles.row1}>
       <TouchableOpacity style={styles.btn}
-          onPress={() => {navigation.navigate('EditSchedule');}}>
+          onPress={() => {navigation.navigate('EditSchedule',userD);}}>
           <Image source={require('../assets/editschedule.png')}/>
           <Text style={styles.btnText}>Edit Schedule</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btn}
-          onPress={() => {navigation.navigate('EditDetails')}}>
+          onPress={() => {navigation.navigate('EditDetails',userD)}}>
           <Image source={require('../assets/edit.png')}/>
           <Text style={styles.btnText}>Edit Details</Text>
         </TouchableOpacity>

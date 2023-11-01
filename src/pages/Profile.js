@@ -8,19 +8,19 @@ import {
 } from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
-import Appointments from './Appointments';
-// import {getAuth, signOut} from '@react-native-firebase/auth';
+import {getAuth, signOut} from '@react-native-firebase/auth';
 // // import { ScrollView } from 'react-native-gesture-handler';
 // const auth = getAuth();
-const Profile = () => {
-//   const signOut = () => {
-//     console.log('Signout called');
-//     // Your authentication sign-out logic (e.g., Firebase.auth().signOut())
-//     // After signing out, navigate to the Login screen.
-//     navigation.navigate('Login');
-//   };
+const Profile = ({route,navigation}) => {
+  const userD=route.params
+  const signOut = () => {
+    console.log('Signout called');
+    // Your authentication sign-out logic (e.g., Firebase.auth().signOut())
+    // After signing out, navigate to the Login screen.
+    navigation.navigate('Login');
+  };
 
-  const navigation = useNavigation();
+
   // const {userD} = route.params;
   return (
     <View style={styles.container}>
@@ -36,7 +36,7 @@ const Profile = () => {
             source={require('../assets/profile.png')}
             style={styles.boxImage}
           />
-          <Text style={styles.heading}>name</Text>
+          <Text style={styles.heading}>{userD.name}</Text>
         </View>
 
         <View style={styles.box}>
@@ -44,26 +44,27 @@ const Profile = () => {
             source={require('../assets/email.png')}
             style={styles.boxImage}
           />
-          <Text style={styles.heading}>email</Text>
+          <Text style={styles.heading}>{userD.email}</Text>
         </View>
         <View style={styles.box}>
           <Image
             source={require('../assets/phone.png')}
             style={styles.boxImage}
           />
-          <Text style={styles.heading}>doctor</Text>
+          <Text style={styles.heading}>{userD.phone}</Text>
         </View>
+        {userD.userType=='user' &&(
         <TouchableOpacity style={styles.box} onPress={()=>{navigation.navigate('Appointments')}}>
           <Image
-            source={require('../assets/phone.png')}
+            source={require('../assets/schedule1.png')}
             style={styles.boxImage}
           />
-          <Text style={styles.heading}>My Appoinments</Text>
+          <Text style={styles.heading}>Bookings</Text>
         </TouchableOpacity>
-
+        )}
         <TouchableOpacity
           style={[styles.box, {backgroundColor: '#466A8F'}]}
-          // onPress={signOut}
+          onPress={signOut}
           >
           <Text style={{color: '#FFFFFF', fontSize: 20}}>Logout</Text>
         </TouchableOpacity>

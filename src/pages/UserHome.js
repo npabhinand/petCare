@@ -2,11 +2,13 @@ import {View, Text, StyleSheet, TouchableOpacity,Image, ScrollView} from 'react-
 import React from 'react';
 import {Avatar, Card} from '@rneui/base';
 
-export default function UserHome({navigation}) {
+export default function UserHome({navigation,route}) {
+  const userD=route.params;
+  console.log(userD)
   return (
     <View  style={{ backgroundColor: 'white',width:'100%',height:'100%'}}>
       <View style={styles.row1}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>{navigation.navigate('Profile',userD)}}>
         <Avatar source={require('../assets/profile.png')} />
         </TouchableOpacity>
        
