@@ -1,26 +1,59 @@
 import { View, Text,StyleSheet,TouchableOpacity, ScrollView } from 'react-native'
-import React from 'react'
+import React,{useState,useEffect} from 'react'
+import firestore from '@react-native-firebase/firestore';
 
-export default function Appointments() {
+export default function Appointments({navigation,route}) {
+  const userD=route.params
+  const [bookingData, setBookingData] = useState([]);
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      try {
+        const bookingRef = firestore().collection('bookings').where('doctorId','==',userD.email)
+        const bookingQuery = await bookingRef.get();
+        if (!bookingQuery.empty) {
+          const bookings = [];
+          bookingQuery.forEach((documentSnapshot) => {
+            bookings.push(documentSnapshot.data());
+          });
+          setBookingData(bookings);
+        } else {
+          console.warn('Bookings not found');
+        }
+      } catch (error) {
+        console.error('Error fetching booking data:', error);
+      }
+    };
+
+    fetchBookingData();
+  }, []);
+
+  const getDayOfWeek = (date) => {
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayIndex = new Date(date).getDay();
+    return daysOfWeek[dayIndex];
+  };
+
   return (
     <View>
       <View style={styles.headingbox}>
       <Text style={styles.heading}>Appointments</Text>
       </View>
       <ScrollView style={{marginBottom:70}}>
-      <View style={styles.card}>
+      {bookingData.map((booking, index) => (
+      <View style={styles.card} key={index}>
         <View style={styles.card1}>
-        <Text style={styles.heading1}> Your Booking Date & Time!</Text>
+        <Text style={styles.heading1}>Booking Date & Time!</Text>
         <View style={styles.row}>
-        <TouchableOpacity style={styles.btn}><Text style={styles.font1}>24 Sep, 2021</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.btn}><Text style={styles.font1}>09.00-09.30</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.btn}><Text style={styles.font1}>Monday</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.btn}><Text style={styles.font1}>{booking.date}</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.btn}><Text style={styles.font1}>{booking.slot}</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.btn}><Text style={styles.font1}>{getDayOfWeek(booking.date)}</Text></TouchableOpacity>
         </View>
-        <Text style={styles.font2}>Abhinand want to consult thier pet</Text>
-        <TouchableOpacity style={styles.btn2}><Text style={[styles.font1,{marginTop:6}]}>$2000</Text></TouchableOpacity>
+        <Text style={styles.font2}>{booking.userName} want to consult thier pet</Text>
+        <TouchableOpacity style={styles.btn2}><Text style={[styles.font1,{marginTop:6}]}>₹{booking.price}</Text></TouchableOpacity>
         </View>
         <Text style={styles.btnText}>Done</Text>
       </View>
+       ))}
       </ScrollView>
     </View>
   )

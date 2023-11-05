@@ -10,10 +10,11 @@ import DoctorHome from './src/pages/DoctorHome';
 import Appointments from './src/pages/Appointments';
 import Profile from './src/pages/Profile';
 import Notification from './src/pages/Notification';
-import AddSchedule from './src/pages/AddSchedule';
+import Schedule from './src/pages/Schedule';
 import EditSchedule from './src/pages/EditSchedule';
-import EditDetails from './src/pages/EditDetails';
+import AddDetails from './src/pages/AddDetails';
 import Edit from './src/pages/Edit';
+import Success from './src/pages/Success';
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -57,8 +58,8 @@ function App() {
           options={{headerShown: false}}
         />
         <Stack.Screen
-          name="AddSchedule"
-          component={AddSchedule}
+          name="Schedule"
+          component={Schedule}
           options={{headerShown: false}}
         />
         <Stack.Screen
@@ -67,13 +68,18 @@ function App() {
           options={{headerShown: false}}
         />
         <Stack.Screen
-          name="EditDetails"
-          component={EditDetails}
+          name="AddDetails"
+          component={AddDetails}
           options={{headerShown: false}}
         />
         <Stack.Screen
           name="Edit"
           component={Edit}
+          options={{headerShown: false}}
+        />
+         <Stack.Screen
+          name="Success"
+          component={Success}
           options={{headerShown: false}}
         />
       </Stack.Navigator>
