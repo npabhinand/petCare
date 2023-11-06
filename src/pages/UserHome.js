@@ -1,9 +1,18 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import { Avatar, Card } from '@rneui/base';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  FlatList,
+} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Avatar, Card} from '@rneui/base';
 import firestore from '@react-native-firebase/firestore';
 
-export default function UserHome({ navigation, route }) {
+
+
+export default function UserHome({navigation, route}) {
   const userD = route.params;
   const [hospitalData, setHospitalData] = useState([]);
 
@@ -16,7 +25,7 @@ export default function UserHome({ navigation, route }) {
 
         if (!hospitalQuery.empty) {
           const hospitals = [];
-          hospitalQuery.forEach((documentSnapshot) => {
+          hospitalQuery.forEach(documentSnapshot => {
             hospitals.push(documentSnapshot.data());
           });
           setHospitalData(hospitals);
@@ -31,49 +40,76 @@ export default function UserHome({ navigation, route }) {
     fetchHospitalData();
   }, []);
 
+  
+
   return (
     <View style={styles.container}>
       <View style={styles.row1}>
-        <TouchableOpacity onPress={() => { navigation.navigate('Profile', userD); }}>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('Profile', userD);
+          }}>
           <Avatar source={require('../assets/profile.png')} />
         </TouchableOpacity>
 
-        <Text style={styles.heading}>Location</Text>
+        <Text style={styles.heading}>{userD.name}</Text>
+
 
         <TouchableOpacity>
           <Avatar source={require('../assets/bell.png')} />
         </TouchableOpacity>
       </View>
       <View style={styles.card1}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View style={{ flexDirection: 'column', margin: 30 }}>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <View style={{flexDirection: 'column', margin: 30}}>
             <Text style={styles.font1}>Find Your best </Text>
             <Text style={styles.font1}>pet Clinic</Text>
             <TouchableOpacity style={styles.btn1}>
               <Text style={styles.font2}>Community</Text>
             </TouchableOpacity>
           </View>
-          <Image source={require("../assets/pet1.png")} style={styles.image} />
+          <Image source={require('../assets/pet1.png')} style={styles.image} />
         </View>
       </View>
-      <View style={[styles.row1, { marginTop: 10, marginBottom: -10 }]}>
+      <View style={[styles.row1, {marginTop: 10, marginBottom: -10}]}>
         <Text style={styles.font3}>Nearby Veterinary</Text>
         <TouchableOpacity>
-          <Text style={[styles.font3, { color: "#bfbfbf" }]}>See All</Text>
+          <Text style={[styles.font3, {color: '#bfbfbf'}]}>See All</Text>
         </TouchableOpacity>
       </View>
       <FlatList
         data={hospitalData}
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
+        renderItem={({item, index}) => (
           <Card containerStyle={styles.card}>
-            <TouchableOpacity onPress={() => { navigation.navigate('DoctorDetails', {userD,item}); }}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('DoctorDetails', {userD, item});
+              }}>
               <View style={styles.row}>
-                <Image source={{ uri: item.image }} style={{width:100,height:100,borderRadius:10}}/>
-                <View style={{ flexDirection: 'column', marginTop: -10, marginLeft: 20 }}>
+                {item.image ? (
+                  <Image
+                    source={{uri: item.image}}
+                    style={{width: 100, height: 100, borderRadius: 10}}
+                    defaultSource={require('../assets/doctor.png')} // Specify the path to your alternate image
+                  />
+                ) : (
+                  <Image
+                    source={require('../assets/doctor.png')}
+                    style={{width: 100, height: 100, borderRadius: 10}}
+                  />
+                )}
+                <View
+                  style={{
+                    flexDirection: 'column',
+                    marginTop: -10,
+                    marginLeft: 20,
+                  }}>
                   <Text style={styles.font3}>Dr.{item.doctorName}</Text>
-                  <Text style={[styles.font4, { marginTop: 5 }]}>{item.price}</Text>
-                  <Text style={styles.font4}>{item.location}</Text>
+                  <Text style={[styles.font4, {marginTop: 5}]}>
+                    {item.price}
+                  </Text>
+                  {/* <Text style={styles.font4}>{item.location}</Text> */}
                   <View style={styles.row}>
                     <Text style={styles.font3}>{item.doctorRating} </Text>
                     <Text>star</Text>
@@ -89,9 +125,9 @@ export default function UserHome({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container:{ 
-    backgroundColor: 'white', 
-    flex:1 
+  container: {
+    backgroundColor: 'white',
+    flex: 1,
   },
   row1: {
     flexDirection: 'row',
@@ -150,10 +186,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  image:{ 
-    width: 140, 
-    height: 175, 
-    marginTop: 10, 
-    marginRight: 10 
-  }
+  image: {
+    width: 140,
+    height: 175,
+    marginTop: 10,
+    marginRight: 10,
+  },
 });

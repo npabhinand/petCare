@@ -11,6 +11,7 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import ImagePicker from 'react-native-image-crop-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddDetails = ({ route, navigation }) => {
   const userD = route.params;
@@ -19,6 +20,18 @@ const AddDetails = ({ route, navigation }) => {
   const [price, setPrice] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageURL, setImageURL] = useState('');
+  const [userLocation, setUserLocation] = useState(null);
+  useEffect(() => {
+    // Retrieve the location from AsyncStorage and set it to the userLocation state
+    AsyncStorage.getItem('userLocation')
+      .then((location) => {
+        const parsedLocation = JSON.parse(location);
+        setUserLocation(parsedLocation || { latitude: 0, longitude: 0 });
+      })
+      .catch((error) => {
+        console.error('Error retrieving location from AsyncStorage:', error);
+      });
+  }, []);
 
   useEffect(() => {
     const fetchHospitalData = async () => {
@@ -37,7 +50,7 @@ const AddDetails = ({ route, navigation }) => {
           setPrice(hospitalData.price || '');
           setImageURL(hospitalData.image || '');
         } else {
-          console.warn('Hospital not found');
+          console.log('Hospital not found');
         }
       } catch (error) {
         console.error('Error fetching hospital data:', error);
@@ -78,7 +91,7 @@ const AddDetails = ({ route, navigation }) => {
     const hospitalData = {
       HospitalName: hospitalName,
       price: price,
-      location: location,
+      location: userLocation, // Set the location to userLocation
       doctorName: userD.name,
       doctorId: userD.email,
       image: imageURL,
@@ -100,11 +113,13 @@ const AddDetails = ({ route, navigation }) => {
         ToastAndroid.show('Hospital data added successfully', ToastAndroid.SHORT);
       }
 
-      navigation.navigate('DoctorHome', { userD });
+      navigation.navigate('DoctorHome',  userD );
     } catch (error) {
       console.error(error.message);
     }
   };
+
+  
 
   return (
     <View style={{ marginBottom: 100 }}>
@@ -119,13 +134,7 @@ const AddDetails = ({ route, navigation }) => {
         placeholder="Enter Hospital name"
         placeholderTextColor="black"
       />
-      <TextInput
-        value={location}
-        onChangeText={setLocation}
-        style={styles.inputs}
-        placeholder="Enter Location"
-        placeholderTextColor="black"
-      />
+    
       <TextInput
         value={price}
         onChangeText={setPrice}

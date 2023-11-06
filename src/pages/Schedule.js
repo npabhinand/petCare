@@ -30,7 +30,7 @@ export default function Schedule({ navigation, route }) {
           setTodaySchedule(todaySchedules);
           setTomorrowSchedule(tomorrowSchedules);
         } else {
-          console.warn('Bookings not found');
+          console.log('Bookings not found');
         }
       } catch (error) {
         console.error('Error fetching booking data:', error);

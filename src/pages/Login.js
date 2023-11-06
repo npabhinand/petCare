@@ -5,72 +5,99 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert
+  Alert,
+  PermissionsAndroid,
 } from 'react-native';
 import React, { useState, useEffect } from 'react'; // Import useEffect
 import { StyleSheet } from 'react-native';
 import { Avatar } from '@rneui/base/dist/Avatar';
 import { getAuth, signInWithEmailAndPassword } from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-// import Geolocation from '@react-native-community/geolocation';
+import Geolocation from '@react-native-community/geolocation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const auth = getAuth(); // Get the authentication object
 
 const Login = ({ navigation }) => {
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Track loading state
 
-  // useEffect(() => {
-  //   // Request location permission here
-  //   Geolocation.requestAuthorization("whenInUse").then(result => {
-  //     if (result === 'granted') {
-  //       // Permission granted
-  //     } else {
-  //       // Permission denied
-  //       Alert.alert('Location permission denied');
-  //     }
-  //   }).catch(error => {
-  //     console.error('Location permission error:', error);
-  //   });
-  // }, []); // Add an empty dependency array to run this effect only once
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      // Check if any required field is empty
-      Alert.alert('Invalid Login');
-      return; // Exit the function
-    }
-
+  const requestLocationPermission = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      const user = auth.currentUser;
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: "Location Permission",
+          message: "App requires access to your location",
+          buttonNeutral: "Ask Me Later",
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK'
+        }
+      );
 
-      // Rest of your code...
-      firestore()
-        .collection('users')
-        .where('email', '==', user.email)
-        .get()
-        .then((querySnapshot) => {
-          if (!querySnapshot.empty) {
-            const userD = querySnapshot.docs[0].data();
-
-            console.log('User Type:', userD.userType);
-
-            if (userD.userType === 'user') {
-              navigation.navigate('UserHome', userD);
-            } else {
-              navigation.navigate('DoctorHome', userD);
-            }
-          }
-        });
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        Geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log('Latitude:', latitude);
+            console.log('Longitude:', longitude);
+           // Store the location in AsyncStorage
+           AsyncStorage.setItem('userLocation', JSON.stringify({ latitude, longitude }));
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+          },
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        );
+      } else {
+        Alert.alert('Location permission denied');
+      }
     } catch (error) {
-      // Handle login error
-      console.error('Login Error:', error);
-      Alert.alert('Invalid email or password');
+      console.warn(error);
     }
   };
 
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+ 
+  
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Invalid Login', 'Please enter both email and password.');
+      return;
+    }
+  
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      // Query Firestore to get user data
+      const userQuerySnapshot = await firestore()
+        .collection('users')
+        .where('email', '==', user.email)
+        .get();
+  
+      if (!userQuerySnapshot.empty) {
+        const userDoc = userQuerySnapshot.docs[0];
+        const userD = userDoc.data();
+  
+        if (userD.userType === 'user') {
+          navigation.navigate('UserHome', userD);
+        } else {
+          navigation.navigate('DoctorHome', userD);
+        }
+      } else {
+        Alert.alert('User not found', 'Please check your credentials.');
+      }
+    } catch (error) {
+        Alert.alert('Invalid email or password');
+    }
+  };
+  
+  
   const togglePasswordVisibility = () => {
     setShowPassword((prevState) => !prevState);
   };

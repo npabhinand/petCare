@@ -8,7 +8,7 @@ export default function Appointments({navigation,route}) {
   useEffect(() => {
     const fetchBookingData = async () => {
       try {
-        const bookingRef = firestore().collection('bookings').where('doctorId','==',userD.email)
+        const bookingRef = firestore().collection('bookings').where('doctorId', '==', userD.email);
         const bookingQuery = await bookingRef.get();
         if (!bookingQuery.empty) {
           const bookings = [];
@@ -17,7 +17,7 @@ export default function Appointments({navigation,route}) {
           });
           setBookingData(bookings);
         } else {
-          console.warn('Bookings not found');
+          console.log('Bookings not found');
         }
       } catch (error) {
         console.error('Error fetching booking data:', error);
