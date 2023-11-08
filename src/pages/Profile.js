@@ -54,7 +54,7 @@ const Profile = ({route,navigation}) => {
           <Text style={styles.heading}>{userD.phone}</Text>
         </View>
         {userD.userType=='user' &&(
-        <TouchableOpacity style={styles.box} onPress={()=>{navigation.navigate('Appointments')}}>
+        <TouchableOpacity style={styles.box} onPress={()=>{navigation.navigate('Appointments',userD)}}>
           <Image
             source={require('../assets/schedule1.png')}
             style={styles.boxImage}

@@ -55,10 +55,10 @@ export default function DoctorHome({navigation, route}) {
         <TouchableOpacity
           style={styles.btn}
           onPress={() => {
-            navigation.navigate('EditSchedule', userD);
+            navigation.navigate('ViewFeedback', userD);
           }}>
-          <Image source={require('../assets/editschedule.png')} />
-          <Text style={styles.btnText}>Edit Schedule</Text>
+          <Avatar source={require('../assets/feedback.png')} size={70}/>
+          <Text style={styles.btnText}>View feedback</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.btn}

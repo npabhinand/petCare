@@ -8,13 +8,23 @@ export default function Appointments({navigation,route}) {
   useEffect(() => {
     const fetchBookingData = async () => {
       try {
-        const bookingRef = firestore().collection('bookings').where('doctorId', '==', userD.email);
-        const bookingQuery = await bookingRef.get();
-        if (!bookingQuery.empty) {
+        const doctorBookingRef = firestore().collection('bookings').where('doctorId', '==', userD.email);
+        const userBookingRef = firestore().collection('bookings').where('userId', '==', userD.email);
+  
+        const doctorBookingQuery = await doctorBookingRef.get();
+        const userBookingQuery = await userBookingRef.get();
+  
+        if (!doctorBookingQuery.empty || !userBookingQuery.empty) {
           const bookings = [];
-          bookingQuery.forEach((documentSnapshot) => {
+  
+          doctorBookingQuery.forEach(documentSnapshot => {
             bookings.push(documentSnapshot.data());
           });
+  
+          userBookingQuery.forEach(documentSnapshot => {
+            bookings.push(documentSnapshot.data());
+          });
+  
           setBookingData(bookings);
         } else {
           console.log('Bookings not found');
@@ -23,10 +33,10 @@ export default function Appointments({navigation,route}) {
         console.error('Error fetching booking data:', error);
       }
     };
-
+  
     fetchBookingData();
   }, []);
-
+  
   const getDayOfWeek = (date) => {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayIndex = new Date(date).getDay();

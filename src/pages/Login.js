@@ -24,6 +24,26 @@ const Login = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Track loading state
 
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
+      const userDString = await AsyncStorage.getItem('userD');
+
+      if (isLoggedIn === 'true' && userDString) {
+        const userD = JSON.parse(userDString);
+
+        if (userD.userType === 'user') {
+          navigation.navigate('UserHome', { userD });
+        } else if (userD.userType === 'doctor') {
+          navigation.navigate('DoctorHome', { userD });
+        }
+      }
+    };
+
+    checkAuthentication();
+  }, [navigation]);
+
+
   const requestLocationPermission = async () => {
     try {
       const granted = await PermissionsAndroid.request(
@@ -49,7 +69,7 @@ const Login = ({ navigation }) => {
           (error) => {
             console.error('Error getting location:', error);
           },
-          { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+          { enableHighAccuracy: true,  timeout: 60000, maximumAge: 1000 },
         );
       } else {
         Alert.alert('Location permission denied');
@@ -70,31 +90,36 @@ const Login = ({ navigation }) => {
       return;
     }
   
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-  
-      // Query Firestore to get user data
-      const userQuerySnapshot = await firestore()
-        .collection('users')
-        .where('email', '==', user.email)
-        .get();
-  
-      if (!userQuerySnapshot.empty) {
-        const userDoc = userQuerySnapshot.docs[0];
-        const userD = userDoc.data();
-  
-        if (userD.userType === 'user') {
-          navigation.navigate('UserHome', userD);
-        } else {
-          navigation.navigate('DoctorHome', userD);
-        }
-      } else {
-        Alert.alert('User not found', 'Please check your credentials.');
-      }
-    } catch (error) {
-        Alert.alert('Invalid email or password');
+    // Inside handleLogin function
+try {
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
+
+  // Query Firestore to get user data
+  const userQuerySnapshot = await firestore()
+    .collection('users')
+    .where('email', '==', user.email)
+    .get();
+
+  if (!userQuerySnapshot.empty) {
+    const userDoc = userQuerySnapshot.docs[0];
+    const userD = userDoc.data();
+    await AsyncStorage.setItem('isLoggedIn', 'true');
+    await AsyncStorage.setItem('userD', JSON.stringify(userD));
+    await AsyncStorage.setItem('userType', userD.userType); // Store user type
+
+    if (userD.userType === 'user') {
+      navigation.navigate('UserHome', { userD });
+    } else {
+      navigation.navigate('DoctorHome', { userD });
     }
+  } else {
+    Alert.alert('User not found', 'Please check your credentials.');
+  }
+} catch (error) {
+  Alert.alert('Invalid email or password');
+}
+
   };
   
   

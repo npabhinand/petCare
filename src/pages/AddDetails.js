@@ -95,6 +95,7 @@ const AddDetails = ({ route, navigation }) => {
       doctorName: userD.name,
       doctorId: userD.email,
       image: imageURL,
+      phone:userD.phone
     };
 
     try {
@@ -113,7 +114,7 @@ const AddDetails = ({ route, navigation }) => {
         ToastAndroid.show('Hospital data added successfully', ToastAndroid.SHORT);
       }
 
-      navigation.navigate('DoctorHome',  userD );
+      navigation.navigate('DoctorHome',userD );
     } catch (error) {
       console.error(error.message);
     }

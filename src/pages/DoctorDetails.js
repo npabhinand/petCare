@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,16 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Linking,
 } from 'react-native';
-import { Avatar } from '@rneui/base';
-import { LocaleConfig } from 'react-native-calendars';
-import { Calendar } from 'react-native-calendars';
+import {Avatar} from '@rneui/base';
+import {LocaleConfig} from 'react-native-calendars';
+import {Calendar} from 'react-native-calendars';
 import firestore from '@react-native-firebase/firestore';
 
-export default function DoctorDetails({ route, navigation }) {
-  const { item } = route.params;
-  const { userD } = route.params;
+export default function DoctorDetails({route, navigation}) {
+  const {item} = route.params;
+  const {userD} = route.params;
   const [bookedSlots, setBookedSlots] = useState([]);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
   const [petName, setPetName] = useState('');
@@ -77,9 +78,9 @@ export default function DoctorDetails({ route, navigation }) {
         .collection('bookings')
         .where('date', '==', date)
         .where('slot', '==', timeSlot);
-  
+
       const querySnapshot = await bookingRef.get();
-  
+
       if (!querySnapshot.empty) {
         // A booking with the same date and time slot exists, so it's already booked
         return false;
@@ -93,7 +94,6 @@ export default function DoctorDetails({ route, navigation }) {
       return false;
     }
   };
-  
 
   const handleBooking = async () => {
     if (selected && selectedTimeSlot) {
@@ -102,21 +102,19 @@ export default function DoctorDetails({ route, navigation }) {
       if (isSlotAvailable) {
         try {
           // Add a new booking to Firestore
-          await firestore()
-            .collection('bookings')
-            .add({
-              userId: userD.email,
-              userName: userD.name,
-              petName: petName,
-              slot: selectedTimeSlot,
-              doctorId: item.doctorId,
-              doctorName: item.doctorName,
-              date: selected,
-              price:item.price
-            });
+          await firestore().collection('bookings').add({
+            userId: userD.email,
+            userName: userD.name,
+            petName: petName,
+            slot: selectedTimeSlot,
+            doctorId: item.doctorId,
+            doctorName: item.doctorName,
+            date: selected,
+            price: item.price,
+          });
 
           // You can also navigate to a success page or show a confirmation message
-          navigation.navigate('Success',userD);
+          navigation.navigate('Success', userD);
         } catch (error) {
           console.error('Error adding booking to Firestore:', error);
         }
@@ -129,53 +127,52 @@ export default function DoctorDetails({ route, navigation }) {
     }
   };
 
-
   // Load booked slots for the selected date
-const loadBookedSlots = async (date) => {
-  try {
-    const bookingRef = firestore()
-      .collection('bookings')
-      .where('date', '==', date);
+  const loadBookedSlots = async date => {
+    try {
+      const bookingRef = firestore()
+        .collection('bookings')
+        .where('date', '==', date);
 
-    const querySnapshot = await bookingRef.get();
-    const bookedSlotsData = [];
+      const querySnapshot = await bookingRef.get();
+      const bookedSlotsData = [];
 
-    querySnapshot.forEach((doc) => {
-      bookedSlotsData.push(doc.data().slot);
-    });
+      querySnapshot.forEach(doc => {
+        bookedSlotsData.push(doc.data().slot);
+      });
 
-    setBookedSlots(bookedSlotsData);
-  } catch (error) {
-    console.error('Error loading booked slots:', error);
-  }
-};
+      setBookedSlots(bookedSlotsData);
+    } catch (error) {
+      console.error('Error loading booked slots:', error);
+    }
+  };
 
-// Function to check if a time slot is available
-const isSlotAvailable = (timeSlot) => {
-  return !bookedSlots.includes(timeSlot);
-};
+  // Function to check if a time slot is available
+  const isSlotAvailable = timeSlot => {
+    return !bookedSlots.includes(timeSlot);
+  };
 
-// Function to handle the time slot selection
-const handleTimeSlotSelection = (timeSlot) => {
-  setSelectedTimeSlot(timeSlot);
-};
+  // Function to handle the time slot selection
+  const handleTimeSlotSelection = timeSlot => {
+    setSelectedTimeSlot(timeSlot);
+  };
 
+  useEffect(() => {
+    if (selected) {
+      loadBookedSlots(selected);
+    }
+  }, [selected]);
 
+  const handleDateSelection = day => {
+    setSelected(day.dateString);
+  };
 
-useEffect(() => {
-  if (selected) {
-    loadBookedSlots(selected);
-  }
-}, [selected]);
-
-const handleDateSelection = (day) => {
-  setSelected(day.dateString);
-};
+  console.log(item.location);
 
   return (
     <View>
       <ScrollView>
-        <View style={{ backgroundColor: '#8a7ffe', height: 350 }}>
+        <View style={{backgroundColor: '#8a7ffe', height: 350}}>
           <Image
             source={require('../assets/doctor.png')}
             style={styles.image}
@@ -188,34 +185,57 @@ const handleDateSelection = (day) => {
               <Text style={styles.font1}>Dr.{item.doctorName}</Text>
               <Text style={styles.font1}>Veterinary Doctor</Text>
             </View>
-            <TouchableOpacity style={styles.callbox}>
+            <TouchableOpacity
+              style={styles.callbox}
+              onPress={() => {
+                const phoneNumber = item.phone;
+                Linking.openURL(`tel:${phoneNumber}`).catch(error => {
+                  console.error('Error opening phone app:', error);
+                });
+              }}>
               <Avatar source={require('../assets/phone.png')} />
             </TouchableOpacity>
           </View>
           <View style={styles.card1}>
             <Avatar
-              source={require('../assets/experience.png')}
-              containerStyle={{ marginLeft: 10 }}
+              source={require('../assets/location.png')}
+              containerStyle={{marginLeft: 10}}
             />
             <View>
-              <Text style={styles.font2}>Experience</Text>
-              <Text style={styles.font2}>4+ Yrs</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  const {latitude, longitude} = item.location;
+                  const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+                  Linking.openURL(url).catch(error => {
+                    console.error('Error opening Google Maps:', error);
+                  });
+                }}>
+              <Text style={styles.font2}>Location</Text>
+              </TouchableOpacity>
             </View>
+            
             <Avatar
               source={require('../assets/price.png')}
-              containerStyle={{ marginLeft: 10 }}
+              containerStyle={{marginLeft: 10}}
+              size={30}
             />
+           
             <View>
-              <Text style={styles.font2}>Rate</Text>
-              <Text style={styles.font2}>{item.price}</Text>
+            <TouchableOpacity>
+              <Text style={styles.font2}>Fee</Text>
+              <Text style={styles.font2}>₹{item.price}</Text>
+              </TouchableOpacity>
             </View>
+           
             <Avatar
               source={require('../assets/star.png')}
-              containerStyle={{ marginLeft: 10 }}
+              containerStyle={{marginLeft: 10}}
             />
             <View>
+            <TouchableOpacity onPress={()=>{navigation.navigate('Feedback',{ userD, item })}}>
               <Text style={styles.font2}>Rating</Text>
-              <Text style={styles.font2}>4.5</Text>
+              <Text style={styles.font2}>{item.averageRating.toFixed(2)}</Text>
+              </TouchableOpacity>
             </View>
           </View>
           <Text style={styles.heading}>About Veterinary</Text>
@@ -227,11 +247,11 @@ const handleDateSelection = (day) => {
           <TextInput
             placeholder="Enter Pet Name"
             style={styles.input}
-            onChangeText={(text) => setPetName(text)}
+            onChangeText={text => setPetName(text)}
           />
-          <View style={{ marginTop: 30 }}>
+          <View style={{marginTop: 30}}>
             <Calendar
-              onDayPress={(day) => {
+              onDayPress={day => {
                 setSelected(day.dateString);
               }}
               markedDates={{
@@ -239,16 +259,25 @@ const handleDateSelection = (day) => {
                   backgroundColor: 'yellow',
                   textColor: 'black',
                 },
-                [selected]: { selected: true, disableTouchEvent: true, selectedDotColor: 'orange' },
+                [selected]: {
+                  selected: true,
+                  disableTouchEvent: true,
+                  selectedDotColor: 'orange',
+                },
                 ...bookedSlots.reduce((acc, slot) => {
-                  acc[slot] = { selected: true, marked: true, disableTouchEvent: true, selectedDotColor: 'red' };
+                  acc[slot] = {
+                    selected: true,
+                    marked: true,
+                    disableTouchEvent: true,
+                    selectedDotColor: 'red',
+                  };
                   return acc;
                 }, {}),
               }}
               style={{
                 borderWidth: 0.2,
                 borderRadius: 10,
-                borderColor:'#98ff98',
+                borderColor: '#98ff98',
                 height: 350,
                 width: '95%',
                 alignSelf: 'center',
@@ -268,245 +297,253 @@ const handleDateSelection = (day) => {
           </View>
           <Text style={styles.heading}>Time</Text>
           <View style={styles.row2}>
-  <TouchableOpacity
-    style={[
-      styles.btn1,
-      {
-        backgroundColor:
-          selectedTimeSlot === '09.00-09.30' && isSlotAvailable('09.00-09.30')
-            ? 'blue'
-            : isSlotAvailable('09.00-09.30')
-            ? '#98ff98'
-            : 'gray',
-      },
-    ]}
-    onPress={() => handleTimeSlotSelection('09.00-09.30')}
-    disabled={!isSlotAvailable('09.00-09.30')}
-  >
-    <Text
-      style={[
-        styles.font3,
-        {
-          color: selectedTimeSlot === '09.00-09.30' && isSlotAvailable('09.00-09.30')
-            ? 'white'
-            : 'black',
-        },
-      ]}
-    >
-      09.00-09.30
-    </Text>
-  </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.btn1,
+                {
+                  backgroundColor:
+                    selectedTimeSlot === '09.00-09.30' &&
+                    isSlotAvailable('09.00-09.30')
+                      ? 'blue'
+                      : isSlotAvailable('09.00-09.30')
+                      ? '#98ff98'
+                      : 'gray',
+                },
+              ]}
+              onPress={() => handleTimeSlotSelection('09.00-09.30')}
+              disabled={!isSlotAvailable('09.00-09.30')}>
+              <Text
+                style={[
+                  styles.font3,
+                  {
+                    color:
+                      selectedTimeSlot === '09.00-09.30' &&
+                      isSlotAvailable('09.00-09.30')
+                        ? 'white'
+                        : 'black',
+                  },
+                ]}>
+                09.00-09.30
+              </Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[
-      styles.btn1,
-      {
-        backgroundColor:
-          selectedTimeSlot === '09.30-10.00' && isSlotAvailable('09.30-10.00')
-            ? 'blue'
-            : isSlotAvailable('09.30-10.00')
-            ? '#98ff98'
-            : 'gray',
-      },
-    ]}
-    onPress={() => handleTimeSlotSelection('09.30-10.00')}
-    disabled={!isSlotAvailable('09.30-10.00')}
-  >
-    <Text
-      style={[
-        styles.font3,
-        {
-          color: selectedTimeSlot === '09.30-10.00' && isSlotAvailable('09.30-10.00')
-            ? 'white'
-            : 'black',
-        },
-      ]}
-    >
-      09.30-10.00
-    </Text>
-  </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.btn1,
+                {
+                  backgroundColor:
+                    selectedTimeSlot === '09.30-10.00' &&
+                    isSlotAvailable('09.30-10.00')
+                      ? 'blue'
+                      : isSlotAvailable('09.30-10.00')
+                      ? '#98ff98'
+                      : 'gray',
+                },
+              ]}
+              onPress={() => handleTimeSlotSelection('09.30-10.00')}
+              disabled={!isSlotAvailable('09.30-10.00')}>
+              <Text
+                style={[
+                  styles.font3,
+                  {
+                    color:
+                      selectedTimeSlot === '09.30-10.00' &&
+                      isSlotAvailable('09.30-10.00')
+                        ? 'white'
+                        : 'black',
+                  },
+                ]}>
+                09.30-10.00
+              </Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[
-      styles.btn1,
-      {
-        backgroundColor:
-          selectedTimeSlot === '10.00-10.30' && isSlotAvailable('10.00-10.30')
-            ? 'blue'
-            : isSlotAvailable('10.00-10.30')
-            ? '#98ff98'
-            : 'gray',
-      },
-    ]}
-    onPress={() => handleTimeSlotSelection('10.00-10.30')}
-    disabled={!isSlotAvailable('10.00-10.30')}
-  >
-    <Text
-      style={[
-        styles.font3,
-        {
-          color: selectedTimeSlot === '10.00-10.30' && isSlotAvailable('10.00-10.30')
-            ? 'white'
-            : 'black',
-        },
-      ]}
-    >
-      10.00-10.30
-    </Text>
-  </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.btn1,
+                {
+                  backgroundColor:
+                    selectedTimeSlot === '10.00-10.30' &&
+                    isSlotAvailable('10.00-10.30')
+                      ? 'blue'
+                      : isSlotAvailable('10.00-10.30')
+                      ? '#98ff98'
+                      : 'gray',
+                },
+              ]}
+              onPress={() => handleTimeSlotSelection('10.00-10.30')}
+              disabled={!isSlotAvailable('10.00-10.30')}>
+              <Text
+                style={[
+                  styles.font3,
+                  {
+                    color:
+                      selectedTimeSlot === '10.00-10.30' &&
+                      isSlotAvailable('10.00-10.30')
+                        ? 'white'
+                        : 'black',
+                  },
+                ]}>
+                10.00-10.30
+              </Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[
-      styles.btn1,
-      {
-        backgroundColor:
-          selectedTimeSlot === '10.30-11.00' && isSlotAvailable('10.30-11.00')
-            ? 'blue'
-            : isSlotAvailable('10.30-11.00')
-            ? '#98ff98'
-            : 'gray',
-      },
-    ]}
-    onPress={() => handleTimeSlotSelection('10.30-11.00')}
-    disabled={!isSlotAvailable('10.30-11.00')}
-  >
-    <Text
-      style={[
-        styles.font3,
-        {
-          color: selectedTimeSlot === '10.30-11.00' && isSlotAvailable('10.30-11.00')
-            ? 'white'
-            : 'black',
-        },
-      ]}
-    >
-      10.30-11.00
-    </Text>
-  </TouchableOpacity>
-</View>
+            <TouchableOpacity
+              style={[
+                styles.btn1,
+                {
+                  backgroundColor:
+                    selectedTimeSlot === '10.30-11.00' &&
+                    isSlotAvailable('10.30-11.00')
+                      ? 'blue'
+                      : isSlotAvailable('10.30-11.00')
+                      ? '#98ff98'
+                      : 'gray',
+                },
+              ]}
+              onPress={() => handleTimeSlotSelection('10.30-11.00')}
+              disabled={!isSlotAvailable('10.30-11.00')}>
+              <Text
+                style={[
+                  styles.font3,
+                  {
+                    color:
+                      selectedTimeSlot === '10.30-11.00' &&
+                      isSlotAvailable('10.30-11.00')
+                        ? 'white'
+                        : 'black',
+                  },
+                ]}>
+                10.30-11.00
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-{/* Repeat the pattern for other time slots */}
-<View style={styles.row2}>
-  <TouchableOpacity
-    style={[
-      styles.btn1,
-      {
-        backgroundColor:
-          selectedTimeSlot === '11.00-11.30' && isSlotAvailable('11.00-11.30')
-            ? 'blue'
-            : isSlotAvailable('11.00-11.30')
-            ? '#98ff98'
-            : 'gray',
-      },
-    ]}
-    onPress={() => handleTimeSlotSelection('11.00-11.30')}
-    disabled={!isSlotAvailable('11.00-11.30')}
-  >
-    <Text
-      style={[
-        styles.font3,
-        {
-          color: selectedTimeSlot === '11.00-11.30' && isSlotAvailable('11.00-11.30')
-            ? 'white'
-            : 'black',
-        },
-      ]}
-    >
-      11.00-11.30
-    </Text>
-  </TouchableOpacity>
+          {/* Repeat the pattern for other time slots */}
+          <View style={styles.row2}>
+            <TouchableOpacity
+              style={[
+                styles.btn1,
+                {
+                  backgroundColor:
+                    selectedTimeSlot === '11.00-11.30' &&
+                    isSlotAvailable('11.00-11.30')
+                      ? 'blue'
+                      : isSlotAvailable('11.00-11.30')
+                      ? '#98ff98'
+                      : 'gray',
+                },
+              ]}
+              onPress={() => handleTimeSlotSelection('11.00-11.30')}
+              disabled={!isSlotAvailable('11.00-11.30')}>
+              <Text
+                style={[
+                  styles.font3,
+                  {
+                    color:
+                      selectedTimeSlot === '11.00-11.30' &&
+                      isSlotAvailable('11.00-11.30')
+                        ? 'white'
+                        : 'black',
+                  },
+                ]}>
+                11.00-11.30
+              </Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[
-      styles.btn1,
-      {
-        backgroundColor:
-          selectedTimeSlot === '11.30-12.00' && isSlotAvailable('11.30-12.00')
-            ? 'blue'
-            : isSlotAvailable('11.30-12.00')
-            ? '#98ff98'
-            : 'gray',
-      },
-    ]}
-    onPress={() => handleTimeSlotSelection('11.30-12.00')}
-    disabled={!isSlotAvailable('11.30-12.00')}
-  >
-    <Text
-      style={[
-        styles.font3,
-        {
-          color: selectedTimeSlot === '11.30-12.00' && isSlotAvailable('11.30-12.00')
-            ? 'white'
-            : 'black',
-        },
-      ]}
-    >
-      11.30-12.00
-    </Text>
-  </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.btn1,
+                {
+                  backgroundColor:
+                    selectedTimeSlot === '11.30-12.00' &&
+                    isSlotAvailable('11.30-12.00')
+                      ? 'blue'
+                      : isSlotAvailable('11.30-12.00')
+                      ? '#98ff98'
+                      : 'gray',
+                },
+              ]}
+              onPress={() => handleTimeSlotSelection('11.30-12.00')}
+              disabled={!isSlotAvailable('11.30-12.00')}>
+              <Text
+                style={[
+                  styles.font3,
+                  {
+                    color:
+                      selectedTimeSlot === '11.30-12.00' &&
+                      isSlotAvailable('11.30-12.00')
+                        ? 'white'
+                        : 'black',
+                  },
+                ]}>
+                11.30-12.00
+              </Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[
-      styles.btn1,
-      {
-        backgroundColor:
-          selectedTimeSlot === '14.00-14.30' && isSlotAvailable('14.00-14.30')
-            ? 'blue'
-            : isSlotAvailable('14.00-14.30')
-            ? '#98ff98'
-            : 'gray',
-      },
-    ]}
-    onPress={() => handleTimeSlotSelection('14.00-14.30')}
-    disabled={!isSlotAvailable('14.00-14.30')}
-  >
-    <Text
-      style={[
-        styles.font3,
-        {
-          color: selectedTimeSlot === '14.00-14.30' && isSlotAvailable('14.00-14.30')
-            ? 'white'
-            : 'black',
-        },
-      ]}
-    >
-      14.00-14.30
-    </Text>
-  </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.btn1,
+                {
+                  backgroundColor:
+                    selectedTimeSlot === '14.00-14.30' &&
+                    isSlotAvailable('14.00-14.30')
+                      ? 'blue'
+                      : isSlotAvailable('14.00-14.30')
+                      ? '#98ff98'
+                      : 'gray',
+                },
+              ]}
+              onPress={() => handleTimeSlotSelection('14.00-14.30')}
+              disabled={!isSlotAvailable('14.00-14.30')}>
+              <Text
+                style={[
+                  styles.font3,
+                  {
+                    color:
+                      selectedTimeSlot === '14.00-14.30' &&
+                      isSlotAvailable('14.00-14.30')
+                        ? 'white'
+                        : 'black',
+                  },
+                ]}>
+                14.00-14.30
+              </Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[
-      styles.btn1,
-      {
-        backgroundColor:
-          selectedTimeSlot === '14.30-15.00' && isSlotAvailable('14.30-15.00')
-            ? 'blue'
-            : isSlotAvailable('14.30-15.00')
-            ? '#98ff98'
-            : 'gray',
-      },
-    ]}
-    onPress={() => handleTimeSlotSelection('14.30-15.00')}
-    disabled={!isSlotAvailable('14.30-15.00')}
-  >
-    <Text
-      style={[
-        styles.font3,
-        {
-          color: selectedTimeSlot === '14.30-15.00' && isSlotAvailable('14.30-15.00')
-            ? 'white'
-            : 'black',
-        },
-      ]}
-    >
-      14.30-15.00
-    </Text>
-  </TouchableOpacity>
-  </View>
-{/*  */}
-          
+            <TouchableOpacity
+              style={[
+                styles.btn1,
+                {
+                  backgroundColor:
+                    selectedTimeSlot === '14.30-15.00' &&
+                    isSlotAvailable('14.30-15.00')
+                      ? 'blue'
+                      : isSlotAvailable('14.30-15.00')
+                      ? '#98ff98'
+                      : 'gray',
+                },
+              ]}
+              onPress={() => handleTimeSlotSelection('14.30-15.00')}
+              disabled={!isSlotAvailable('14.30-15.00')}>
+              <Text
+                style={[
+                  styles.font3,
+                  {
+                    color:
+                      selectedTimeSlot === '14.30-15.00' &&
+                      isSlotAvailable('14.30-15.00')
+                        ? 'white'
+                        : 'black',
+                  },
+                ]}>
+                14.30-15.00
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {/*  */}
+
           <TouchableOpacity style={styles.btn2} onPress={handleBooking}>
-            <Text style={{ textAlign: 'center', fontSize: 20, color: 'white' }}>
+            <Text style={{textAlign: 'center', fontSize: 20, color: 'white'}}>
               Book Appointment
             </Text>
           </TouchableOpacity>
@@ -557,11 +594,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    // justifyContent:'space-around'
   },
   font2: {
     color: '#5068BE',
-    marginLeft: 10,
-    marginRight: 10,
+    marginLeft: 5,
+    marginRight: 30,
   },
   heading: {
     padding: 10,
@@ -574,7 +612,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginRight: 20,
     fontSize: 18,
-    color:'gray',
+    color: 'gray',
   },
   input: {
     borderWidth: 1,
@@ -587,7 +625,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-evenly',
-    marginTop:10
+    marginTop: 10,
   },
   btn1: {
     height: 40,

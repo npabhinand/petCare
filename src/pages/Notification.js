@@ -1,31 +1,59 @@
-import { View, Text ,StyleSheet} from 'react-native'
-import React from 'react'
-import { Avatar } from '@rneui/base'
+import { View, Text ,StyleSheet, ScrollView} from 'react-native'
+import React,{useState,useEffect} from 'react'
+import { Avatar } from '@rneui/base';
+import firestore from '@react-native-firebase/firestore';
 
-const Notification = ({navigation}) => {
+const Notification = ({navigation,route}) => {
+  const userD=route.params
+  const [bookingData, setBookingData] = useState([]);
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      try {
+        const doctorBookingRef = firestore().collection('bookings').where('doctorId', '==', userD.email);
+        const userBookingRef = firestore().collection('bookings').where('userId', '==', userD.email);
+  
+        const doctorBookingQuery = await doctorBookingRef.get();
+        const userBookingQuery = await userBookingRef.get();
+  
+        if (!doctorBookingQuery.empty || !userBookingQuery.empty) {
+          const bookings = [];
+  
+          doctorBookingQuery.forEach(documentSnapshot => {
+            bookings.push(documentSnapshot.data());
+          });
+  
+          userBookingQuery.forEach(documentSnapshot => {
+            bookings.push(documentSnapshot.data());
+          });
+  
+          setBookingData(bookings);
+        } else {
+          console.log('Bookings not found');
+        }
+      } catch (error) {
+        console.error('Error fetching booking data:', error);
+      }
+    };
+  
+    fetchBookingData();
+  }, []);
   return (
     <View style={styles.container}>
       <Avatar source={require('../assets/doctor1.jpg')} rounded size={50} containerStyle={styles.profileIcon}
-      onPress={()=>{navigation.navigate('Profile')}}>
+      onPress={()=>{navigation.navigate('Profile',userD)}}>
       </Avatar>
       <Text style={styles.heading} >Notifications</Text>
+      <ScrollView>
       <View style={styles.cards}>
-
-        <View style={styles.contentView}>
+        
+      {bookingData.map((booking, index) => (
+        <View style={styles.contentView} key={index}>
           <Avatar source={require('../assets/doctor1.jpg')} rounded size={40}></Avatar>
-        <Text style={styles.content}>Appointment successfully completed at the ABC hospital at 09.00-09.30 on May 29, 2023</Text>
+        <Text style={styles.content}>Appointment successfully completed  at {booking.slot} on May 29, 2023</Text>
         </View> 
-        {/*  */}
-        <View style={styles.contentView}>
-          <Avatar source={require('../assets/doctor1.jpg')} rounded size={40}></Avatar>
-        <Text style={styles.content}>Appointment successfully completed at the ABC hospital at 09.00-09.30 on May 29, 2023</Text>
-        </View> 
-        <View style={styles.contentView}>
-          <Avatar source={require('../assets/doctor1.jpg')} rounded size={40}></Avatar>
-        <Text style={styles.content}>Appointment successfully completed at the ABC hospital at 09.00-09.30 on May 29, 2023</Text>
-        </View> 
-         {/*  */}
+         ))}         
       </View>
+      </ScrollView>
     </View>
   )
 }
@@ -35,7 +63,7 @@ export default Notification
 const styles=StyleSheet.create({
   container:{
     backgroundColor:'#E6F3EA',
-    flex:1
+    flex:1,
   },
   profileIcon:{
     alignSelf:'flex-end',

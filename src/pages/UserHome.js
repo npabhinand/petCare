@@ -5,30 +5,91 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  ScrollView
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Avatar, Card} from '@rneui/base';
 import firestore from '@react-native-firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const radlat1 = (Math.PI * lat1) / 180;
+  const radlat2 = (Math.PI * lat2) / 180;
+  const theta = lon1 - lon2;
+  const radtheta = (Math.PI * theta) / 180;
+  let dist =
+    Math.sin(radlat1) * Math.sin(radlat2) +
+    Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+  dist = Math.acos(dist);
+  dist = (dist * 180) / Math.PI;
+  dist = dist * 60 * 1.1515; // distance in miles
+  dist = dist * 1.609344; // distance in kilometers
+  return dist;
+}
 
 export default function UserHome({navigation, route}) {
   const userD = route.params;
   const [hospitalData, setHospitalData] = useState([]);
 
+
+  async function getAverageRating(hospitalName) {
+    try {
+      const feedbackRef = firestore().collection('feedback');
+      const querySnapshot = await feedbackRef.where('hospitalName', '==', hospitalName).get();
+  
+      let totalRating = 0;
+      let totalFeedbackCount = 0;
+  
+      querySnapshot.forEach((doc) => {
+        const feedback = doc.data();
+        totalRating += feedback.rating;
+        totalFeedbackCount++;
+      });
+  
+      if (totalFeedbackCount === 0) {
+        return 0; // No feedback found, return a default value
+      }
+  
+      const averageRating = totalRating / totalFeedbackCount;
+      return averageRating;
+    } catch (error) {
+      console.error('Error fetching average rating:', error);
+      return 0; // Return a default value in case of an error
+    }
+  }
+
+  
   useEffect(() => {
     const fetchHospitalData = async () => {
       try {
         const hospitalRef = firestore().collection('hospital').limit(5);
-
         const hospitalQuery = await hospitalRef.get();
-
+  
         if (!hospitalQuery.empty) {
           const hospitals = [];
-          hospitalQuery.forEach(documentSnapshot => {
-            hospitals.push(documentSnapshot.data());
+          const userLocation = JSON.parse(
+            await AsyncStorage.getItem('userLocation')
+          ); // Retrieve user location from AsyncStorage
+  
+          // Create an array of promises to fetch average ratings for all hospitals
+          const fetchAverageRatingsPromises = hospitalQuery.docs.map(async (documentSnapshot) => {
+            const hospital = documentSnapshot.data();
+            const distance = calculateDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              hospital.location.latitude,
+              hospital.location.longitude
+            );
+            hospital.distance = distance;
+  
+            const averageRating = await getAverageRating(hospital.HospitalName);
+            hospital.averageRating = averageRating;
+  
+            return hospital;
           });
-          setHospitalData(hospitals);
+  
+          const hospitalsWithRatings = await Promise.all(fetchAverageRatingsPromises);
+          setHospitalData(hospitalsWithRatings);
         } else {
           console.warn('Hospitals not found');
         }
@@ -36,10 +97,9 @@ export default function UserHome({navigation, route}) {
         console.error('Error fetching hospital data:', error);
       }
     };
-
+  
     fetchHospitalData();
   }, []);
-
   
 
   return (
@@ -54,8 +114,7 @@ export default function UserHome({navigation, route}) {
 
         <Text style={styles.heading}>{userD.name}</Text>
 
-
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>{navigation.navigate('Notification',userD)}}>
           <Avatar source={require('../assets/bell.png')} />
         </TouchableOpacity>
       </View>
@@ -73,10 +132,11 @@ export default function UserHome({navigation, route}) {
       </View>
       <View style={[styles.row1, {marginTop: 10, marginBottom: -10}]}>
         <Text style={styles.font3}>Nearby Veterinary</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>{navigation.navigate('DoctorList',userD)}}>
           <Text style={[styles.font3, {color: '#bfbfbf'}]}>See All</Text>
         </TouchableOpacity>
       </View>
+     
       <FlatList
         data={hospitalData}
         keyExtractor={(item, index) => index.toString()}
@@ -107,12 +167,17 @@ export default function UserHome({navigation, route}) {
                   }}>
                   <Text style={styles.font3}>Dr.{item.doctorName}</Text>
                   <Text style={[styles.font4, {marginTop: 5}]}>
-                    {item.price}
+                   {item.HospitalName}
                   </Text>
-                  {/* <Text style={styles.font4}>{item.location}</Text> */}
                   <View style={styles.row}>
-                    <Text style={styles.font3}>{item.doctorRating} </Text>
-                    <Text>star</Text>
+                  <Avatar source={require('../assets/location.png')} containerStyle={{marginLeft:-5}} size={25}/>
+                  <Text style={styles.font4}>{item.distance.toFixed(2)} km</Text>
+                  </View>
+                  <View style={styles.row}>
+                  <Avatar source={require('../assets/star.png')} containerStyle={{marginLeft:-5}} size={25}/>
+                  <Text style={styles.font4}>Rating: {item.averageRating.toFixed(2)}</Text>
+              {/* Display the average rating here */}
+                    
                   </View>
                 </View>
               </View>
@@ -120,6 +185,7 @@ export default function UserHome({navigation, route}) {
           </Card>
         )}
       />
+     
     </View>
   );
 }
