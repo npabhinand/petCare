@@ -28,7 +28,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 export default function UserHome({navigation, route}) {
-  const userD = route.params;
+  const {userD} = route.params;
   const [hospitalData, setHospitalData] = useState([]);
 
 
@@ -71,25 +71,45 @@ export default function UserHome({navigation, route}) {
             await AsyncStorage.getItem('userLocation')
           ); // Retrieve user location from AsyncStorage
   
-          // Create an array of promises to fetch average ratings for all hospitals
-          const fetchAverageRatingsPromises = hospitalQuery.docs.map(async (documentSnapshot) => {
-            const hospital = documentSnapshot.data();
-            const distance = calculateDistance(
-              userLocation.latitude,
-              userLocation.longitude,
-              hospital.location.latitude,
-              hospital.location.longitude
-            );
-            hospital.distance = distance;
+          if (userLocation && userLocation.latitude && userLocation.longitude) {
+            // Create an array of promises to fetch average ratings for all hospitals
+            const fetchAverageRatingsPromises = hospitalQuery.docs.map(async (documentSnapshot) => {
+              const hospital = documentSnapshot.data();
   
-            const averageRating = await getAverageRating(hospital.HospitalName);
-            hospital.averageRating = averageRating;
+              // Check if the hospital has location information
+              if (
+                hospital.location &&
+                hospital.location.latitude !== undefined &&
+                hospital.location.longitude !== undefined
+              ) {
+                const distance = calculateDistance(
+                  userLocation.latitude,
+                  userLocation.longitude,
+                  hospital.location.latitude,
+                  hospital.location.longitude
+                );
+                hospital.distance = distance;
+              } else {
+                // Set a default value or message if latitude or longitude is missing
+                hospital.distance = 'Location data missing';
+              }
   
-            return hospital;
-          });
+              // Check if the hospital has a valid HospitalName
+              if (hospital.HospitalName) {
+                const averageRating = await getAverageRating(hospital.HospitalName);
+                hospital.averageRating = averageRating;
+              }
   
-          const hospitalsWithRatings = await Promise.all(fetchAverageRatingsPromises);
-          setHospitalData(hospitalsWithRatings);
+              return hospital;
+            });
+  
+            const hospitalsWithRatings = await Promise.all(fetchAverageRatingsPromises);
+  
+            setHospitalData(hospitalsWithRatings);
+          } else {
+            // Handle the case where user location is missing
+            console.warn('User location data is missing.');
+          }
         } else {
           console.warn('Hospitals not found');
         }
@@ -100,6 +120,7 @@ export default function UserHome({navigation, route}) {
   
     fetchHospitalData();
   }, []);
+  
   
 
   return (

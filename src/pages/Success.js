@@ -8,7 +8,7 @@ export default function Success({route,navigation}) {
     <View style={styles.container}>
       <Image source={require('../assets/success.png')}/>
       <Text style={styles.heading}>Your appointment successfully booked</Text>
-      <TouchableOpacity onPress={()=>{navigation.navigate('UserHome',userD)}} 
+      <TouchableOpacity onPress={()=>{navigation.navigate('UserHome',{userD})}} 
       style={styles.btn}><Text style={{color:'black'}}>Go To Home</Text></TouchableOpacity>
     </View>
   )

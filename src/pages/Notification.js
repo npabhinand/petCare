@@ -77,7 +77,7 @@ const styles=StyleSheet.create({
   },
   cards:{
     width:'95%',
-    height:'100%',
+    height:1000,
     backgroundColor:'white',
     alignSelf:'flex-end',
     marginTop:10,

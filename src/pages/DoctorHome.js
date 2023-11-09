@@ -3,7 +3,7 @@ import React from 'react';
 import {Avatar} from '@rneui/base';
 
 export default function DoctorHome({navigation, route}) {
-  const userD = route.params;
+  const {userD} = route.params;
   return (
     <View style={styles.container}>
       <View style={styles.row}>
@@ -15,7 +15,7 @@ export default function DoctorHome({navigation, route}) {
               navigation.navigate('Profile', userD);
             }}></Avatar>
         </TouchableOpacity>
-        <Text style={styles.heading}>Dr.Abhinand</Text>
+        <Text style={styles.heading}>Dr.{userD.name}</Text>
         <TouchableOpacity
           onPress={() => {
             navigation.navigate('Notification', userD);
@@ -63,7 +63,7 @@ export default function DoctorHome({navigation, route}) {
         <TouchableOpacity
           style={styles.btn}
           onPress={() => {
-            navigation.navigate('AddDetails', userD);
+            navigation.navigate('AddDetails', { userD: userD });
           }}>
           <Image source={require('../assets/edit.png')} />
           <Text style={styles.btnText}>Add Details</Text>

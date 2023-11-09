@@ -131,7 +131,7 @@ export default function DoctorDetails({route, navigation}) {
   const loadBookedSlots = async date => {
     try {
       const bookingRef = firestore()
-        .collection('bookings')
+        .collection('bookings').where("doctorId","==",item.doctorId)
         .where('date', '==', date);
 
       const querySnapshot = await bookingRef.get();
@@ -248,6 +248,7 @@ export default function DoctorDetails({route, navigation}) {
             placeholder="Enter Pet Name"
             style={styles.input}
             onChangeText={text => setPetName(text)}
+            placeholderTextColor="black"
           />
           <View style={{marginTop: 30}}>
             <Calendar
@@ -620,6 +621,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     padding: 10,
     borderRadius: 10,
+    color:'black'
   },
   row2: {
     flexDirection: 'row',

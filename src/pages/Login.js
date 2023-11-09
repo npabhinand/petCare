@@ -32,11 +32,18 @@ const Login = ({ navigation }) => {
       if (isLoggedIn === 'true' && userDString) {
         const userD = JSON.parse(userDString);
 
-        if (userD.userType === 'user') {
-          navigation.navigate('UserHome', { userD });
-        } else if (userD.userType === 'doctor') {
-          navigation.navigate('DoctorHome', { userD });
-        }
+        if (userD.userType == "doctor") {
+          console.log(userD, "userD PASSED");
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "DoctorHome", params: { userD: userD } }],
+          });
+        } else {
+          console.log("true1", userD.userType);
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "UserHome", params: { userD: userD } }],
+          });}
       }
     };
 
@@ -67,7 +74,7 @@ const Login = ({ navigation }) => {
            AsyncStorage.setItem('userLocation', JSON.stringify({ latitude, longitude }));
           },
           (error) => {
-            console.error('Error getting location:', error);
+            console.log('Error getting location:', error);
           },
           { enableHighAccuracy: true,  timeout: 60000, maximumAge: 1000 },
         );
@@ -75,7 +82,7 @@ const Login = ({ navigation }) => {
         Alert.alert('Location permission denied');
       }
     } catch (error) {
-      console.warn(error);
+      console.log(error);
     }
   };
 
@@ -108,10 +115,18 @@ try {
     await AsyncStorage.setItem('userD', JSON.stringify(userD));
     await AsyncStorage.setItem('userType', userD.userType); // Store user type
 
-    if (userD.userType === 'user') {
-      navigation.navigate('UserHome', { userD });
+    if (userD.userType == "doctor") {
+      console.log(userD, "userD PASSED");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "DoctorHome", params: { userD: userD } }],
+      });
     } else {
-      navigation.navigate('DoctorHome', { userD });
+      console.log("true1", userD.userType);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "UserHome", params: { userD: userD } }],
+      });
     }
   } else {
     Alert.alert('User not found', 'Please check your credentials.');
@@ -129,13 +144,14 @@ try {
 
   return (
     <View>
+      <ScrollView>
       <View>
         <Text style={styles.heading}>Login to your account</Text>
         <Image
           source={require('../assets/pet.png')}
           style={{ width: '95%', height: 300, marginBottom: 50 }}
         />
-        <ScrollView>
+        
           <View style={styles.form1}>
             <Avatar
               size={32}
@@ -209,8 +225,9 @@ try {
               Sign up
             </Text>
           </View>
-        </ScrollView>
+        
       </View>
+      </ScrollView>
     </View>
   );
 };

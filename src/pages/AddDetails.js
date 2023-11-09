@@ -14,7 +14,8 @@ import ImagePicker from 'react-native-image-crop-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddDetails = ({ route, navigation }) => {
-  const userD = route.params;
+  const {userD} = route.params;
+  // console.log(userD)
   const [hospitalName, setHospitalName] = useState('');
   const [location, setLocation] = useState('');
   const [price, setPrice] = useState('');
@@ -112,9 +113,10 @@ const AddDetails = ({ route, navigation }) => {
       } else {
         await firestore().collection('hospital').add(hospitalData);
         ToastAndroid.show('Hospital data added successfully', ToastAndroid.SHORT);
+        
       }
-
-      navigation.navigate('DoctorHome',userD );
+      navigation.navigate('DoctorHome',{userD} );
+      
     } catch (error) {
       console.error(error.message);
     }

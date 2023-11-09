@@ -7,21 +7,22 @@ import {
   ScrollView,
 } from 'react-native';
 import React from 'react';
-import {useNavigation} from '@react-navigation/native';
-import {getAuth, signOut} from '@react-native-firebase/auth';
-// // import { ScrollView } from 'react-native-gesture-handler';
-// const auth = getAuth();
+import AsyncStorage from '@react-native-async-storage/async-storage';;
+import { getAuth, signOut } from '@react-native-firebase/auth';
+
+const auth = getAuth(); // Get the authentication object
 const Profile = ({route,navigation}) => {
   const userD=route.params
-  const signOut = () => {
-    console.log('Signout called');
-    // Your authentication sign-out logic (e.g., Firebase.auth().signOut())
-    // After signing out, navigate to the Login screen.
-    navigation.navigate('Login');
+  const clearAsyncStorage = async () => {
+    try {
+      await AsyncStorage.clear(); 
+      navigation.navigate('Login')// Clear all AsyncStorage data
+    } catch (error) {
+      console.error('Error clearing AsyncStorage:', error);
+    }
   };
-
-
-  // const {userD} = route.params;
+  
+  
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -64,7 +65,7 @@ const Profile = ({route,navigation}) => {
         )}
         <TouchableOpacity
           style={[styles.box, {backgroundColor: '#466A8F'}]}
-          onPress={signOut}
+          onPress={clearAsyncStorage}
           >
           <Text style={{color: '#FFFFFF', fontSize: 20}}>Logout</Text>
         </TouchableOpacity>

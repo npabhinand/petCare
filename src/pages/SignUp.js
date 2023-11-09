@@ -30,19 +30,30 @@ const SignUp = ({navigation}) => {
   };
   
   const handleSignUp = async () => {
-    if (!email || !password || !name || !phone ) {
+    if (!email || !password || !name || !phone) {
       // Check if any required field is empty
       Alert.alert('Error', 'Please fill in all the required fields');
       return; // Exit the function
     }
   
     try {
+      // Check if the email is already in use
+      const emailExists = await auth().fetchSignInMethodsForEmail(email);
+  
+      if (emailExists && emailExists.length > 0) {
+        // Email is already registered
+        Alert.alert('Error', 'This email address is already in use.');
+        return;
+      }
+  
+      // If the email is not in use, proceed with registration
       const userCredentials = await auth().createUserWithEmailAndPassword(email, password);
       const user = userCredentials.user;
       console.log(user.email);
   
       // Store user data in Firestore
-      await firestore().collection('users')
+      await firestore()
+        .collection('users')
         .doc(user.uid) // Use user's UID as the document ID
         .set({
           userType: checked,
@@ -54,9 +65,12 @@ const SignUp = ({navigation}) => {
       ToastAndroid.show('SignUp successful', ToastAndroid.SHORT);
       navigation.navigate('Login');
     } catch (error) {
-      console.error(error.message);
+      console.log(error.message);
+      Alert.alert('Error', 'This email address is already in use.');
+      // Handle other errors as needed
     }
   };
+  
 
   return (
     <View>

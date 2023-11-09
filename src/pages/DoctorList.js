@@ -30,29 +30,65 @@ import {
 export default function DoctorList({navigation, route}) {
     const userD = route.params;
     const [hospitalData, setHospitalData] = useState([]);
+
+    async function getAverageRating(hospitalName) {
+      try {
+        const feedbackRef = firestore().collection('feedback');
+        const querySnapshot = await feedbackRef.where('hospitalName', '==', hospitalName).get();
+    
+        let totalRating = 0;
+        let totalFeedbackCount = 0;
+    
+        querySnapshot.forEach((doc) => {
+          const feedback = doc.data();
+          totalRating += feedback.rating;
+          totalFeedbackCount++;
+        });
+    
+        if (totalFeedbackCount === 0) {
+          return 0; // No feedback found, return a default value
+        }
+    
+        const averageRating = totalRating / totalFeedbackCount;
+        return averageRating;
+      } catch (error) {
+        console.error('Error fetching average rating:', error);
+        return 0; // Return a default value in case of an error
+      }
+    }
+  
+    
     useEffect(() => {
       const fetchHospitalData = async () => {
         try {
-          const hospitalRef = firestore().collection('hospital')
+          const hospitalRef = firestore().collection('hospital');
           const hospitalQuery = await hospitalRef.get();
-  
+    
           if (!hospitalQuery.empty) {
             const hospitals = [];
             const userLocation = JSON.parse(
-              await AsyncStorage.getItem('userLocation'),
+              await AsyncStorage.getItem('userLocation')
             ); // Retrieve user location from AsyncStorage
-            hospitalQuery.forEach(documentSnapshot => {
+    
+            // Create an array of promises to fetch average ratings for all hospitals
+            const fetchAverageRatingsPromises = hospitalQuery.docs.map(async (documentSnapshot) => {
               const hospital = documentSnapshot.data();
               const distance = calculateDistance(
                 userLocation.latitude,
                 userLocation.longitude,
                 hospital.location.latitude,
-                hospital.location.longitude,
+                hospital.location.longitude
               );
               hospital.distance = distance;
-              hospitals.push(hospital);
+    
+              const averageRating = await getAverageRating(hospital.HospitalName);
+              hospital.averageRating = averageRating;
+    
+              return hospital;
             });
-            setHospitalData(hospitals);
+    
+            const hospitalsWithRatings = await Promise.all(fetchAverageRatingsPromises);
+            setHospitalData(hospitalsWithRatings);
           } else {
             console.warn('Hospitals not found');
           }
@@ -60,7 +96,7 @@ export default function DoctorList({navigation, route}) {
           console.error('Error fetching hospital data:', error);
         }
       };
-  
+    
       fetchHospitalData();
     }, []);
   
@@ -89,7 +125,7 @@ export default function DoctorList({navigation, route}) {
                     style={{width: 100, height: 100, borderRadius: 10}}
                   />
                 )}
-                <View
+               <View
                   style={{
                     flexDirection: 'column',
                     marginTop: -10,
@@ -97,15 +133,17 @@ export default function DoctorList({navigation, route}) {
                   }}>
                   <Text style={styles.font3}>Dr.{item.doctorName}</Text>
                   <Text style={[styles.font4, {marginTop: 5}]}>
-                    {item.price}
+                   {item.HospitalName}
                   </Text>
                   <View style={styles.row}>
-                  <Image source={require('../assets/location.png')} />
+                  <Avatar source={require('../assets/location.png')} containerStyle={{marginLeft:-5}} size={25}/>
                   <Text style={styles.font4}>{item.distance.toFixed(2)} km</Text>
                   </View>
                   <View style={styles.row}>
-                    <Text style={styles.font3}>{item.doctorRating} </Text>
-                    <Text>star</Text>
+                  <Avatar source={require('../assets/star.png')} containerStyle={{marginLeft:-5}} size={25}/>
+                  <Text style={styles.font4}>Rating: {item.averageRating.toFixed(2)}</Text>
+              {/* Display the average rating here */}
+                    
                   </View>
                 </View>
               </View>
