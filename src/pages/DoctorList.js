@@ -68,11 +68,18 @@ export default function DoctorList({navigation, route}) {
             const hospitals = [];
             const userLocation = JSON.parse(
               await AsyncStorage.getItem('userLocation')
-            ); // Retrieve user location from AsyncStorage
+            );
     
             // Create an array of promises to fetch average ratings for all hospitals
             const fetchAverageRatingsPromises = hospitalQuery.docs.map(async (documentSnapshot) => {
-              const hospital = documentSnapshot.data();
+              const hospitalData = documentSnapshot.data();
+              const hospitalId = documentSnapshot.id; // Get the document ID (unique identifier)
+    
+              const hospital = {
+                ...hospitalData,
+                hospitalId, // Set the unique ID as hospitalId
+              };
+    
               const distance = calculateDistance(
                 userLocation.latitude,
                 userLocation.longitude,
@@ -84,11 +91,13 @@ export default function DoctorList({navigation, route}) {
               const averageRating = await getAverageRating(hospital.HospitalName);
               hospital.averageRating = averageRating;
     
+              hospitals.push(hospital); // Store hospital data
+    
               return hospital;
             });
     
-            const hospitalsWithRatings = await Promise.all(fetchAverageRatingsPromises);
-            setHospitalData(hospitalsWithRatings);
+            await Promise.all(fetchAverageRatingsPromises);
+            setHospitalData(hospitals);
           } else {
             console.warn('Hospitals not found');
           }
@@ -149,6 +158,7 @@ export default function DoctorList({navigation, route}) {
               </View>
             </TouchableOpacity>
           </Card>
+          
         )}
       />
     </View>
@@ -211,7 +221,7 @@ const styles = StyleSheet.create({
       borderRadius: 20,
       alignSelf: 'center',
       width: '95%',
-      marginBottom: 10,
+      
     },
     row: {
       flexDirection: 'row',

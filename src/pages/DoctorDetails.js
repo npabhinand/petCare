@@ -167,7 +167,8 @@ export default function DoctorDetails({route, navigation}) {
     setSelected(day.dateString);
   };
 
-  console.log(item.location);
+  // console.log(item.location);
+  // console.log(item.hospitalId)
 
   return (
     <View>

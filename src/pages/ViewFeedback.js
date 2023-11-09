@@ -20,11 +20,11 @@ export default function ViewFeedback({ navigation, route }) {
           // Assuming there's only one hospital per doctor
           const hospitalDoc = hospitalQuery.docs[0];
           const hospitalData = hospitalDoc.data();
-          const HospitalName = hospitalData.HospitalName; // Retrieve the hospital name
+          const hospitalId = hospitalDoc.id;   // Retrieve the hospital name
 
           const feedbackRef = firestore()
             .collection('feedback')
-            .where('HospitalName', '==', HospitalName);
+            .where('hospitalId', '==',hospitalId);
           const feedbackQuery = await feedbackRef.get();
 
           if (!feedbackQuery.empty) {

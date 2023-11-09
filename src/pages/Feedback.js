@@ -17,8 +17,8 @@ const Feedback = ({navigation, route}) => {
 
   const handlePost = async () => {
     const formData = {
-      HospitalName: item.HospitalName,
-      DoctorId:item.DoctorId,
+      hospitalId: item.hospitalId,
+      DoctorId:item.doctorId,
       userId: userD.email,
       feedback: feedback,
       rating: rate,
@@ -29,7 +29,7 @@ const Feedback = ({navigation, route}) => {
       ToastAndroid.show('Feedback successfully', ToastAndroid.SHORT);
       navigation.navigate('DoctorDetails', {userD: userD, item: item});
     } catch (error) {
-      //   console.log('Error submitting form data:', error);
+        console.log('Error submitting form data:', error);
       ToastAndroid.show('Feeddback is not posted', ToastAndroid.SHORT);
     }
   };
@@ -44,13 +44,6 @@ const Feedback = ({navigation, route}) => {
           RATE YOUR EXPERIENCE
         </Text>
 
-        {/* <Rating
-          ratingCount={5}
-          imageSize={60}
-          style={{marginLeft: 10}}
-          startingValue={0}
-          onFinishRating={setRate} // This should update the rate state
-        /> */}
         <Rating
           type="star"
           ratingCount={5}
@@ -78,7 +71,9 @@ const Feedback = ({navigation, route}) => {
             marginLeft: 10,
             marginTop: 30,
             marginBottom: 20,
+            color:'black'
           }}
+          placeholderTextColor={'black'}
         />
         <View
           style={{

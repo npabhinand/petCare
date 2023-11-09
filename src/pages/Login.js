@@ -76,7 +76,7 @@ const Login = ({ navigation }) => {
           (error) => {
             console.log('Error getting location:', error);
           },
-          { enableHighAccuracy: true,  timeout: 60000, maximumAge: 1000 },
+          { enableHighAccuracy: false,  timeout: 60000, maximumAge: 1000 },
         );
       } else {
         Alert.alert('Location permission denied');

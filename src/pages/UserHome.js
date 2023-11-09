@@ -32,10 +32,10 @@ export default function UserHome({navigation, route}) {
   const [hospitalData, setHospitalData] = useState([]);
 
 
-  async function getAverageRating(hospitalName) {
+  async function getAverageRating(hospitalId) {
     try {
       const feedbackRef = firestore().collection('feedback');
-      const querySnapshot = await feedbackRef.where('hospitalName', '==', hospitalName).get();
+      const querySnapshot = await feedbackRef.where('hospitalId', '==', hospitalId).get();
   
       let totalRating = 0;
       let totalFeedbackCount = 0;
@@ -69,47 +69,36 @@ export default function UserHome({navigation, route}) {
           const hospitals = [];
           const userLocation = JSON.parse(
             await AsyncStorage.getItem('userLocation')
-          ); // Retrieve user location from AsyncStorage
+          );
   
-          if (userLocation && userLocation.latitude && userLocation.longitude) {
-            // Create an array of promises to fetch average ratings for all hospitals
-            const fetchAverageRatingsPromises = hospitalQuery.docs.map(async (documentSnapshot) => {
-              const hospital = documentSnapshot.data();
+          // Create an array of promises to fetch average ratings for all hospitals
+          const fetchAverageRatingsPromises = hospitalQuery.docs.map(async (documentSnapshot) => {
+            const hospitalData = documentSnapshot.data();
+            const hospitalId = documentSnapshot.id; // Get the document ID (unique identifier)
   
-              // Check if the hospital has location information
-              if (
-                hospital.location &&
-                hospital.location.latitude !== undefined &&
-                hospital.location.longitude !== undefined
-              ) {
-                const distance = calculateDistance(
-                  userLocation.latitude,
-                  userLocation.longitude,
-                  hospital.location.latitude,
-                  hospital.location.longitude
-                );
-                hospital.distance = distance;
-              } else {
-                // Set a default value or message if latitude or longitude is missing
-                hospital.distance = 'Location data missing';
-              }
+            const hospital = {
+              ...hospitalData,
+              hospitalId, // Set the unique ID as hospitalId
+            };
   
-              // Check if the hospital has a valid HospitalName
-              if (hospital.HospitalName) {
-                const averageRating = await getAverageRating(hospital.HospitalName);
-                hospital.averageRating = averageRating;
-              }
+            const distance = calculateDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              hospital.location.latitude,
+              hospital.location.longitude
+            );
+            hospital.distance = distance;
   
-              return hospital;
-            });
+            const averageRating = await getAverageRating(hospital.hospitalId);
+            hospital.averageRating = averageRating;
   
-            const hospitalsWithRatings = await Promise.all(fetchAverageRatingsPromises);
+            hospitals.push(hospital); // Store hospital data
   
-            setHospitalData(hospitalsWithRatings);
-          } else {
-            // Handle the case where user location is missing
-            console.warn('User location data is missing.');
-          }
+            return hospital;
+          });
+  
+          await Promise.all(fetchAverageRatingsPromises);
+          setHospitalData(hospitals);
         } else {
           console.warn('Hospitals not found');
         }
@@ -267,7 +256,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignSelf: 'center',
     width: '95%',
-    marginBottom: 10,
+    // marginBottom: 2,
   },
   row: {
     flexDirection: 'row',
