@@ -16,7 +16,10 @@ const Profile = ({route,navigation}) => {
   const clearAsyncStorage = async () => {
     try {
       await AsyncStorage.clear(); 
-      navigation.navigate('Login')// Clear all AsyncStorage data
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login",}],
+      });// Clear all AsyncStorage data
     } catch (error) {
       console.error('Error clearing AsyncStorage:', error);
     }

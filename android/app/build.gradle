@@ -126,14 +126,14 @@ dependencies {
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); 
 applyNativeModulesAppBuildGradle(project)
 // new code
-// task('fails', type: Copy) {
-//     doFirst {
-//         mkdir 'build/unreadable'
-//         file('build/unreadable').setReadable(false)
-//     }
-//     from('.') {
-//         include 'build.gradle'
-//         rename { 'fails.txt' }
-//     }
-//     into 'build'
-// }
+task('fails', type: Copy) {
+    doFirst {
+        mkdir 'build/unreadable'
+        file('build/unreadable').setReadable(false)
+    }
+    from('.') {
+        include 'build.gradle'
+        rename { 'fails.txt' }
+    }
+    into 'build'
+}

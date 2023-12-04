@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   Linking,
+  Alert,
 } from 'react-native';
 import {Avatar} from '@rneui/base';
 import {LocaleConfig} from 'react-native-calendars';
@@ -97,8 +98,22 @@ export default function DoctorDetails({route, navigation}) {
 
   const handleBooking = async () => {
     if (selected && selectedTimeSlot) {
-      const isSlotAvailable = checkSlotAvailability(selected, selectedTimeSlot);
-
+      // Convert selected date string to a Date object
+      const selectedDate = new Date(selected);
+  
+      // Get the current date
+      const currentDate = new Date();
+  
+      // Check if the selected date is in the past
+      if (selectedDate < currentDate) {
+        // The selected date is in the past; display an error message or handle it accordingly
+        Alert.alert('Cannot book past day slots');
+        // You might want to display an error message or disable the "Book Appointment" button
+        return;
+      }
+  
+      const isSlotAvailable = await checkSlotAvailability(selected, selectedTimeSlot);
+  
       if (isSlotAvailable) {
         try {
           // Add a new booking to Firestore
@@ -112,7 +127,7 @@ export default function DoctorDetails({route, navigation}) {
             date: selected,
             price: item.price,
           });
-
+  
           // You can also navigate to a success page or show a confirmation message
           navigation.navigate('Success', userD);
         } catch (error) {
@@ -121,9 +136,11 @@ export default function DoctorDetails({route, navigation}) {
       } else {
         // The slot is already booked or not available
         // Display an error message or disable the "Book Appointment" button
+        console.log('Selected slot is not available');
       }
     } else {
       // No date or time slot is selected; display an error or prompt the user to select a date and time
+      console.log('Please select a date and time slot');
     }
   };
 

@@ -49,7 +49,7 @@ const Notification = ({navigation,route}) => {
       {bookingData.map((booking, index) => (
         <View style={styles.contentView} key={index}>
           <Avatar source={require('../assets/doctor1.jpg')} rounded size={40}></Avatar>
-        <Text style={styles.content}>Appointment successfully completed  at {booking.slot} on May 29, 2023</Text>
+        <Text style={styles.content}>Appointment successfully completed  at {booking.slot} on {booking.date}</Text>
         </View> 
          ))}         
       </View>
